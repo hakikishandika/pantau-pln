@@ -10,10 +10,17 @@ const ACCEPT_ATTR = ACCEPTED_TYPES.join(",");
 const BUCKET_NAME = "flyer-images";
 
 type FormStatus = "idle" | "loading" | "success" | "error";
+type ProgressPhase = "upload" | "process";
 
 interface FilePreview {
   file: File;
   url: string;
+}
+
+interface ProcessFlyerResponse {
+  status: "success" | "error";
+  auto_approved?: boolean;
+  message?: string;
 }
 
 function formatFileSize(bytes: number): string {
@@ -53,8 +60,10 @@ export default function SubmitPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<FilePreview[]>([]);
   const [status, setStatus] = useState<FormStatus>("idle");
-  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [progressPhase, setProgressPhase] = useState<ProgressPhase>("upload");
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [successCount, setSuccessCount] = useState(0);
+  const [autoApproved, setAutoApproved] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -81,8 +90,10 @@ export default function SubmitPage() {
     clearPreviews();
     setErrorMessage(null);
     setStatus("idle");
-    setUploadProgress({ current: 0, total: 0 });
+    setProgress({ current: 0, total: 0 });
+    setProgressPhase("upload");
     setSuccessCount(0);
+    setAutoApproved(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -118,6 +129,17 @@ export default function SubmitPage() {
     setPreviews(nextPreviews);
   }
 
+  async function processFlyer(flyerId: string): Promise<ProcessFlyerResponse> {
+    const response = await fetch("/api/process-flyer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flyerId }),
+    });
+
+    const payload = (await response.json()) as ProcessFlyerResponse;
+    return payload;
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
@@ -138,14 +160,18 @@ export default function SubmitPage() {
     }
 
     setStatus("loading");
-    setUploadProgress({ current: 0, total: selectedFiles.length });
+    setProgressPhase("upload");
+    setProgress({ current: 0, total: selectedFiles.length });
+
+    const uploadedFlyerIds: string[] = [];
+    let lastAutoApproved = false;
 
     try {
       const supabase = createSupabaseBrowserClient();
 
       for (let index = 0; index < selectedFiles.length; index += 1) {
         const file = selectedFiles[index];
-        setUploadProgress({ current: index + 1, total: selectedFiles.length });
+        setProgress({ current: index + 1, total: selectedFiles.length });
 
         const extension = getFileExtension(file);
         const filePath = `${crypto.randomUUID()}.${extension}`;
@@ -169,19 +195,39 @@ export default function SubmitPage() {
           data: { publicUrl },
         } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
 
-        const { error: insertError } = await supabase.from("flyers").insert({
-          image_url: publicUrl,
-          status: "pending",
-        });
+        const { data: insertedFlyer, error: insertError } = await supabase
+          .from("flyers")
+          .insert({
+            image_url: publicUrl,
+            status: "pending",
+          })
+          .select("id")
+          .single();
 
-        if (insertError) {
+        if (insertError || !insertedFlyer) {
           throw new Error(
-            `Gagal menyimpan data flyer "${file.name}": ${insertError.message}`,
+            `Gagal menyimpan data flyer "${file.name}": ${insertError?.message ?? "unknown error"}`,
           );
+        }
+
+        uploadedFlyerIds.push(insertedFlyer.id);
+      }
+
+      setProgressPhase("process");
+      setProgress({ current: 0, total: uploadedFlyerIds.length });
+
+      for (let index = 0; index < uploadedFlyerIds.length; index += 1) {
+        const flyerId = uploadedFlyerIds[index];
+        setProgress({ current: index + 1, total: uploadedFlyerIds.length });
+
+        const result = await processFlyer(flyerId);
+        if (result.status === "success" && result.auto_approved) {
+          lastAutoApproved = true;
         }
       }
 
-      setSuccessCount(selectedFiles.length);
+      setSuccessCount(uploadedFlyerIds.length);
+      setAutoApproved(lastAutoApproved);
       setStatus("success");
       setSelectedFiles([]);
       clearPreviews();
@@ -200,6 +246,10 @@ export default function SubmitPage() {
 
   const isLoading = status === "loading";
   const isSuccess = status === "success";
+
+  const successMessage = autoApproved
+    ? `${successCount} flyer diproses dan langsung tayang`
+    : `${successCount} flyer diproses, menunggu review singkat`;
 
   return (
     <main className="flex flex-1 flex-col bg-zinc-50 px-4 py-8 sm:px-6">
@@ -234,9 +284,7 @@ export default function SubmitPage() {
                 <path d="M20 6 9 17l-5-5" />
               </svg>
             </div>
-            <p className="font-medium text-green-800">
-              Berhasil mengirim {successCount} flyer, sedang diverifikasi admin.
-            </p>
+            <p className="font-medium text-green-800">{successMessage}</p>
             <button
               type="button"
               onClick={resetForm}
@@ -321,7 +369,9 @@ export default function SubmitPage() {
                     className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
                     aria-hidden="true"
                   />
-                  Mengupload {uploadProgress.current} dari {uploadProgress.total}
+                  {progressPhase === "upload"
+                    ? `Mengupload ${progress.current}/${progress.total}`
+                    : `Memproses ${progress.current}/${progress.total}`}
                 </>
               ) : (
                 "Kirim Flyer"

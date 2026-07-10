@@ -406,6 +406,47 @@ export default function AdminFlyerDetailPage() {
     }
   }
 
+  async function handleCancelApproval() {
+    if (!flyer || flyer.status !== "approved") {
+      return;
+    }
+
+    setIsUpdatingStatus(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase
+        .from("flyers")
+        .update({
+          status: "pending",
+          reviewed_at: null,
+          reviewed_by: null,
+        })
+        .eq("id", flyer.id)
+        .select("*")
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setFlyer(data as Flyer);
+      setSuccessMessage(
+        "Approval dibatalkan. Flyer kembali ke status pending.",
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Gagal membatalkan approval.";
+      setErrorMessage(message);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  }
+
   async function handleStatusUpdate(status: "approved" | "rejected") {
     if (!flyer) {
       return;
@@ -758,7 +799,23 @@ export default function AdminFlyerDetailPage() {
             >
               Reject
             </button>
+
+            {flyer.status === "approved" && (
+              <button
+                type="button"
+                onClick={() => void handleCancelApproval()}
+                disabled={isBusy}
+                className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Batalkan Approval
+              </button>
+            )}
           </div>
+          {flyer.processing_error && (
+            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Error proses otomatis: {flyer.processing_error}
+            </p>
+          )}
         </section>
 
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">

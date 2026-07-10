@@ -1,33 +1,49 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { CitizenReportSummarySection } from "@/components/citizen-report-summary";
+import { TodayOutageReportRow } from "@/components/today-outage-report-row";
 import { formatHoursLabel } from "@/lib/duration";
 import {
-  aggregateLocationsByName,
-  filterFlyersByDateRange,
-  toMapPoints,
+  aggregateAreaRanking,
+  averageHoursPerIncident,
+  buildTodayFlyerReports,
+  countLocationsInFlyer,
+  countUniqueAreas,
+  exportRankingCsv,
+  filterFlyersByPeriod,
+  sumTotalHours,
+  type PeriodFilter,
 } from "@/lib/public-dashboard";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { PublicApprovedFlyer } from "@/lib/types/public-map";
 
-const OutageMap = dynamic(() => import("@/components/outage-map"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full min-h-[320px] items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-100 text-sm text-zinc-500">
-      Memuat peta...
-    </div>
-  ),
-});
+const PERIOD_OPTIONS: { value: PeriodFilter; label: string }[] = [
+  { value: "7d", label: "7 hari terakhir" },
+  { value: "30d", label: "30 hari terakhir" },
+  { value: "all", label: "Semua waktu" },
+];
 
-const LONG_OUTAGE_THRESHOLD_HOURS = 6;
+function formatDisplayDate(date: string | null): string {
+  if (!date) {
+    return "—";
+  }
+  const parsed = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return date;
+  }
+  return parsed.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default function PublicDashboardPage() {
   const [flyers, setFlyers] = useState<PublicApprovedFlyer[]>([]);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [period, setPeriod] = useState<PeriodFilter>("7d");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -45,6 +61,7 @@ export default function PublicDashboardPage() {
           .select(
             `
             id,
+            status,
             tanggal_pemadaman,
             waktu_pemadaman,
             unit_pelaksana,
@@ -65,7 +82,6 @@ export default function PublicDashboardPage() {
           `,
           )
           .eq("status", "approved")
-          .order("tanggal_pemadaman", { ascending: false, nullsFirst: false })
           .order("created_at", { ascending: false });
 
         if (error) {
@@ -98,49 +114,51 @@ export default function PublicDashboardPage() {
   }, []);
 
   const filteredFlyers = useMemo(
-    () => filterFlyersByDateRange(flyers, dateFrom, dateTo),
-    [flyers, dateFrom, dateTo],
+    () => filterFlyersByPeriod(flyers, period),
+    [flyers, period],
   );
 
-  const aggregatedLocations = useMemo(
-    () => aggregateLocationsByName(filteredFlyers),
+  const ranking = useMemo(
+    () => aggregateAreaRanking(filteredFlyers),
     [filteredFlyers],
   );
 
-  const mapPoints = useMemo(
-    () => toMapPoints(aggregatedLocations),
-    [aggregatedLocations],
+  const todayReports = useMemo(
+    () => buildTodayFlyerReports(flyers),
+    [flyers],
   );
 
-  const totalAreas = aggregatedLocations.length;
-  const totalOutageHours = useMemo(
-    () =>
-      Math.round(
-        aggregatedLocations.reduce((sum, location) => sum + location.total_jam, 0) *
-          100,
-      ) / 100,
-    [aggregatedLocations],
-  );
+  const latestReports = useMemo(() => flyers.slice(0, 8), [flyers]);
 
-  const longOutageAreas = useMemo(
-    () =>
-      aggregatedLocations.filter(
-        (location) => location.total_jam > LONG_OUTAGE_THRESHOLD_HOURS,
-      ),
-    [aggregatedLocations],
-  );
+  const uniqueAreas = countUniqueAreas(ranking);
+  const totalHours = sumTotalHours(ranking);
+  const avgPerIncident = averageHoursPerIncident(ranking);
+  const todayReportCount = todayReports.length;
 
   const hasApprovedFlyers = flyers.length > 0;
-  const hasMapData = aggregatedLocations.length > 0;
+
+  function handleDownloadCsv() {
+    const csv = exportRankingCsv(ranking);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `pemadaman-banjarbaru-${period}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   if (!isLoading && !errorMessage && !hasApprovedFlyers) {
     return (
       <main className="flex flex-1 flex-col bg-zinc-50">
-        <DashboardHeader />
-        <div className="mx-auto flex w-full max-w-6xl flex-1 items-center justify-center px-4 py-16 sm:px-6">
-          <p className="text-center text-sm text-zinc-500 sm:text-base">
-            Belum ada data pemadaman yang terverifikasi
-          </p>
+        <DashboardHeader onDownloadCsv={handleDownloadCsv} showDownload={false} />
+        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+          <CitizenReportSummarySection />
+          <div className="flex flex-1 items-center justify-center py-10">
+            <p className="text-center text-sm text-zinc-500 sm:text-base">
+              Belum ada data pemadaman yang terverifikasi
+            </p>
+          </div>
         </div>
       </main>
     );
@@ -148,47 +166,59 @@ export default function PublicDashboardPage() {
 
   return (
     <main className="flex flex-1 flex-col bg-zinc-50">
-      <DashboardHeader />
+      <DashboardHeader onDownloadCsv={handleDownloadCsv} showDownload />
 
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+        <section className="rounded-2xl border-2 border-amber-300 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-zinc-900">
+              Padam Listrik Hari Ini
+            </h2>
+            <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
+              {isLoading ? "..." : `${todayReportCount} laporan`}
+            </span>
+          </div>
+
+          {isLoading ? (
+            <p className="mt-4 text-sm text-zinc-500">Memuat data hari ini...</p>
+          ) : todayReports.length === 0 ? (
+            <p className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800">
+              Belum ada laporan pemadaman hari ini
+            </p>
+          ) : (
+            <div className="mt-4 space-y-2">
+              {todayReports.map((report) => (
+                <TodayOutageReportRow key={report.id} report={report} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <CitizenReportSummarySection />
+
         <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
-          <h2 className="text-sm font-semibold text-zinc-900">
-            Filter rentang tanggal
-          </h2>
-          <p className="mt-1 text-xs text-zinc-500">
-            Kosongkan untuk menampilkan semua data terverifikasi
-          </p>
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <label
-                htmlFor="date-from"
-                className="block text-xs font-medium text-zinc-700"
-              >
-                Dari tanggal
-              </label>
-              <input
-                id="date-from"
-                type="date"
-                value={dateFrom}
-                onChange={(event) => setDateFrom(event.target.value)}
-                className="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2"
-              />
+              <h2 className="text-sm font-semibold text-zinc-900">
+                Filter periode statistik
+              </h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                Berdasarkan tanggal pemadaman pada flyer
+              </p>
             </div>
-            <div>
-              <label
-                htmlFor="date-to"
-                className="block text-xs font-medium text-zinc-700"
-              >
-                Sampai tanggal
-              </label>
-              <input
-                id="date-to"
-                type="date"
-                value={dateTo}
-                onChange={(event) => setDateTo(event.target.value)}
-                className="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2"
-              />
-            </div>
+            <select
+              value={period}
+              onChange={(event) =>
+                setPeriod(event.target.value as PeriodFilter)
+              }
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2"
+            >
+              {PERIOD_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
         </section>
 
@@ -201,153 +231,145 @@ export default function PublicDashboardPage() {
           </div>
         )}
 
-        <section className="grid grid-cols-2 gap-3 sm:gap-4">
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 sm:gap-4">
           <StatCard
-            label="Jumlah Area Terdampak"
-            value={isLoading ? "..." : String(totalAreas)}
+            label="Area Terdampak"
+            value={isLoading ? "..." : String(uniqueAreas)}
           />
           <StatCard
-            label="Total Jam Mati Lampu"
+            label="Total Jam Padam"
+            value={isLoading ? "..." : formatHoursLabel(totalHours)}
+          />
+          <StatCard
+            label="Rata-rata per Kejadian"
             value={
-              isLoading ? "..." : formatHoursLabel(totalOutageHours)
+              isLoading ? "..." : `${avgPerIncident.toFixed(1)} jam`
             }
           />
+          <StatCard
+            label="Laporan Hari Ini"
+            value={isLoading ? "..." : String(todayReportCount)}
+          />
         </section>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-wrap gap-3 text-xs text-zinc-600">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-full bg-green-600" />
-                Nominatim
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-full bg-yellow-500" />
-                Estimasi AI
-              </span>
-            </div>
-            <div className="h-[360px] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm sm:h-[420px] lg:h-[500px]">
-              {isLoading ? (
-                <div className="flex h-full items-center justify-center text-sm text-zinc-500">
-                  Memuat data peta...
-                </div>
-              ) : !hasMapData ? (
-                <div className="flex h-full items-center justify-center px-6 text-center text-sm text-zinc-500">
-                  Tidak ada lokasi dengan koordinat pada filter ini
-                </div>
-              ) : (
-                <OutageMap points={mapPoints} />
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-            <div className="border-b border-zinc-200 px-4 py-3 sm:px-5">
-              <h2 className="text-base font-semibold text-zinc-900">
-                Area Terdampak
-              </h2>
-              <p className="mt-1 text-xs text-zinc-500">
-                Diurutkan dari total jam terbesar
-              </p>
-            </div>
-            <div className="max-h-[500px] overflow-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="sticky top-0 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
-                  <tr>
-                    <th className="px-4 py-3 font-medium sm:px-5">Nama</th>
-                    <th className="px-4 py-3 font-medium sm:px-5">
-                      Jumlah Sesi Pemadaman
-                    </th>
-                    <th className="px-4 py-3 font-medium sm:px-5">Total Jam</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {isLoading ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-4 py-6 text-center text-zinc-500 sm:px-5"
-                      >
-                        Memuat data...
-                      </td>
-                    </tr>
-                  ) : aggregatedLocations.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-4 py-6 text-center text-zinc-500 sm:px-5"
-                      >
-                        Tidak ada area pada filter ini
-                      </td>
-                    </tr>
-                  ) : (
-                    aggregatedLocations.map((location) => (
-                      <tr key={location.nama} className="hover:bg-zinc-50">
-                        <td className="px-4 py-3 font-medium text-zinc-900 sm:px-5">
-                          {location.nama}
-                        </td>
-                        <td className="px-4 py-3 text-zinc-700 sm:px-5">
-                          {location.jumlah_sesi}
-                        </td>
-                        <td className="px-4 py-3 text-zinc-700 sm:px-5">
-                          {formatHoursLabel(location.total_jam)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
-          <h2 className="text-base font-semibold text-zinc-900">
-            Area yang Terdampak Mati Lampu Lebih dari 6 Jam
-          </h2>
-          {isLoading ? (
-            <p className="mt-4 text-sm text-zinc-500">Memuat data...</p>
-          ) : longOutageAreas.length === 0 ? (
-            <p className="mt-4 text-sm text-zinc-500">
-              Belum ada area dengan total pemadaman lebih dari 6 jam
+        <section className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+          <div className="border-b border-zinc-200 px-4 py-3 sm:px-5">
+            <h2 className="text-base font-semibold text-zinc-900">
+              Area Paling Sering Padam
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500">
+              Diurutkan berdasarkan total jam terbesar
             </p>
-          ) : (
-            <div className="mt-4 overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="text-xs uppercase tracking-wide text-zinc-500">
+          </div>
+          <div className="max-h-[480px] overflow-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="sticky top-0 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
+                <tr>
+                  <th className="px-4 py-3 font-medium sm:px-5">Nama</th>
+                  <th className="px-4 py-3 font-medium sm:px-5">Kejadian</th>
+                  <th className="px-4 py-3 font-medium sm:px-5">Total Jam</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {isLoading ? (
                   <tr>
-                    <th className="px-3 py-2 font-medium">Nama</th>
-                    <th className="px-3 py-2 font-medium">
-                      Jumlah Sesi Pemadaman
-                    </th>
-                    <th className="px-3 py-2 font-medium">Total Jam</th>
+                    <td
+                      colSpan={3}
+                      className="px-4 py-6 text-center text-zinc-500 sm:px-5"
+                    >
+                      Memuat data...
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {longOutageAreas.map((location) => (
-                    <tr key={location.nama}>
-                      <td className="px-3 py-2 font-medium text-zinc-900">
-                        {location.nama}
+                ) : ranking.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-4 py-6 text-center text-zinc-500 sm:px-5"
+                    >
+                      Tidak ada data pada periode ini
+                    </td>
+                  </tr>
+                ) : (
+                  ranking.map((row) => (
+                    <tr key={row.nama} className="hover:bg-zinc-50">
+                      <td className="px-4 py-3 font-medium text-zinc-900 sm:px-5">
+                        {row.nama}
                       </td>
-                      <td className="px-3 py-2 text-zinc-700">
-                        {location.jumlah_sesi}
+                      <td className="px-4 py-3 text-zinc-700 sm:px-5">
+                        {row.jumlah_kejadian}
                       </td>
-                      <td className="px-3 py-2 text-zinc-700">
-                        {formatHoursLabel(location.total_jam)}
+                      <td className="px-4 py-3 text-zinc-700 sm:px-5">
+                        {formatHoursLabel(row.total_jam)}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+          <div className="border-b border-zinc-200 px-4 py-3 sm:px-5">
+            <h2 className="text-base font-semibold text-zinc-900">
+              Laporan Terbaru
+            </h2>
+          </div>
+          <ul className="divide-y divide-zinc-100">
+            {isLoading ? (
+              <li className="px-4 py-6 text-center text-sm text-zinc-500 sm:px-5">
+                Memuat laporan...
+              </li>
+            ) : latestReports.length === 0 ? (
+              <li className="px-4 py-6 text-center text-sm text-zinc-500 sm:px-5">
+                Belum ada laporan
+              </li>
+            ) : (
+              latestReports.map((flyer) => (
+                <li
+                  key={flyer.id}
+                  className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900">
+                      {formatDisplayDate(flyer.tanggal_pemadaman)}
+                    </p>
+                    <p className="mt-1 text-xs text-zinc-600">
+                      {flyer.waktu_pemadaman || "Waktu belum diisi"} ·{" "}
+                      {countLocationsInFlyer(flyer)} lokasi
+                    </p>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      {flyer.unit_pelaksana || "Unit pelaksana belum diisi"}
+                    </p>
+                  </div>
+                  <span className="inline-flex w-fit rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                    {flyer.status ?? "approved"}
+                  </span>
+                </li>
+              ))
+            )}
+          </ul>
         </section>
       </div>
+
+      {/*
+        --- LEGACY MAP DASHBOARD (disembunyikan, dipertahankan untuk referensi) ---
+        import dynamic from "next/dynamic";
+        import { aggregateLocationsByName, filterFlyersByDateRange, toMapPoints } from "@/lib/public-dashboard";
+        const OutageMap = dynamic(() => import("@/components/outage-map"), { ssr: false });
+        // Filter rentang tanggal manual + peta Leaflet + tabel Area Terdampak + section >6 jam
+      */}
     </main>
   );
 }
 
-function DashboardHeader() {
+function DashboardHeader({
+  onDownloadCsv,
+  showDownload,
+}: {
+  onDownloadCsv: () => void;
+  showDownload: boolean;
+}) {
   return (
     <header className="border-b border-zinc-200 bg-white px-4 py-6 sm:px-6">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -356,16 +378,27 @@ function DashboardHeader() {
             Pantau Pemadaman PLN Banjarbaru
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-600 sm:text-base">
-            Peta jadwal pemadaman listrik PLN ULP Banjarbaru, dilaporkan oleh
-            warga
+            Pantau jadwal pemadaman listrik PLN ULP Banjarbaru berdasarkan flyer
+            yang dilaporkan warga
           </p>
         </div>
-        <Link
-          href="/submit"
-          className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-        >
-          Laporkan Flyer Baru
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {showDownload && (
+            <button
+              type="button"
+              onClick={onDownloadCsv}
+              className="inline-flex items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 transition-colors hover:bg-zinc-50"
+            >
+              Unduh CSV
+            </button>
+          )}
+          <Link
+            href="/submit"
+            className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          >
+            Laporkan Flyer Baru
+          </Link>
+        </div>
       </div>
     </header>
   );
@@ -377,9 +410,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 sm:text-sm">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-bold text-zinc-900 sm:text-3xl">
-        {value}
-      </p>
+      <p className="mt-2 text-xl font-bold text-zinc-900 sm:text-2xl">{value}</p>
     </div>
   );
 }

@@ -35,6 +35,7 @@ export interface PublicOutageSession {
 
 export interface PublicApprovedFlyer {
   id: string;
+  status?: string;
   tanggal_pemadaman: string | null;
   waktu_pemadaman: string | null;
   unit_pelaksana: string | null;

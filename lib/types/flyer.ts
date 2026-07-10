@@ -12,6 +12,7 @@ export interface Flyer {
   created_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
+  processing_error: string | null;
 }
 
 export type FlyerFilter = "all" | FlyerStatus;
