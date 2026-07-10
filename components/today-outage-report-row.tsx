@@ -4,6 +4,11 @@ import { MessageCircle } from "lucide-react";
 import { useState } from "react";
 
 import type { TodayFlyerReport } from "@/lib/public-dashboard";
+import type { VerificationTally } from "@/lib/types/verification";
+import {
+  formatVerificationTally,
+  hasVerificationData,
+} from "@/lib/verifications";
 
 function summarizeLocations(locations: TodayFlyerReport["locations"]): string {
   const names = locations.map((entry) => entry.nama);
@@ -19,9 +24,13 @@ function summarizeLocations(locations: TodayFlyerReport["locations"]): string {
 export function TodayOutageReportRow({
   report,
   onCommentClick,
+  verificationTally,
+  isVerificationLoading = false,
 }: {
   report: TodayFlyerReport;
   onCommentClick?: (flyerId: string) => void;
+  verificationTally?: VerificationTally;
+  isVerificationLoading?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const waktu =
@@ -42,6 +51,19 @@ export function TodayOutageReportRow({
         <p className="mt-1 text-xs text-gray-400">
           {report.unit_pelaksana || "Unit pelaksana belum diisi"} · {waktu}
         </p>
+        {!isVerificationLoading && (
+          <p
+            className={`mt-1 text-[11px] ${
+              verificationTally && hasVerificationData(verificationTally)
+                ? "text-amber-400"
+                : "text-gray-500"
+            }`}
+          >
+            {verificationTally && hasVerificationData(verificationTally)
+              ? formatVerificationTally(verificationTally)
+              : "Belum ada konfirmasi warga"}
+          </p>
+        )}
         <p className="mt-1 text-[11px] text-blue-400">
           {expanded ? "Klik untuk ringkas" : "Klik untuk lihat semua lokasi"}
         </p>

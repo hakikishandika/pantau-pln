@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  ClipboardCheck,
   Clock,
   Download,
   FileText,
@@ -10,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 
 import { AreaRankingChart } from "@/components/area-ranking-chart";
@@ -34,6 +36,8 @@ import {
 } from "@/lib/public-dashboard";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { PublicApprovedFlyer } from "@/lib/types/public-map";
+import type { VerificationTally } from "@/lib/types/verification";
+import { aggregateVerificationsByFlyer } from "@/lib/verifications";
 
 const OutageMap = dynamic(() => import("@/components/outage-map"), {
   ssr: false,
@@ -75,6 +79,10 @@ export default function PublicDashboardPage() {
   const [preselectedSuaraFlyerId, setPreselectedSuaraFlyerId] = useState<
     string | null
   >(null);
+  const [verificationByFlyer, setVerificationByFlyer] = useState<
+    Map<string, VerificationTally>
+  >(new Map());
+  const [isVerificationLoading, setIsVerificationLoading] = useState(true);
 
   function scrollToSuaraWarga(flyerId: string) {
     setPreselectedSuaraFlyerId(flyerId);
@@ -144,6 +152,56 @@ export default function PublicDashboardPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadVerifications() {
+      const todayIds = buildTodayFlyerReports(flyers).map((report) => report.id);
+
+      if (todayIds.length === 0) {
+        if (!cancelled) {
+          setVerificationByFlyer(new Map());
+          setIsVerificationLoading(false);
+        }
+        return;
+      }
+
+      setIsVerificationLoading(true);
+
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const { data, error } = await supabase
+          .from("verifications")
+          .select("flyer_id, status")
+          .in("flyer_id", todayIds);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        if (!cancelled) {
+          setVerificationByFlyer(aggregateVerificationsByFlyer(data ?? []));
+        }
+      } catch {
+        if (!cancelled) {
+          setVerificationByFlyer(new Map());
+        }
+      } finally {
+        if (!cancelled) {
+          setIsVerificationLoading(false);
+        }
+      }
+    }
+
+    if (!isLoading) {
+      void loadVerifications();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [flyers, isLoading]);
 
   const filteredFlyers = useMemo(
     () => filterFlyersByPeriod(flyers, period),
@@ -230,6 +288,8 @@ export default function PublicDashboardPage() {
                   key={report.id}
                   report={report}
                   onCommentClick={scrollToSuaraWarga}
+                  verificationTally={verificationByFlyer.get(report.id)}
+                  isVerificationLoading={isVerificationLoading}
                 />
               ))}
             </div>
@@ -543,16 +603,25 @@ function DashboardHeader({
             </p>
           </div>
         </div>
-        {showDownload && (
-          <button
-            type="button"
-            onClick={onDownloadCsv}
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          <Link
+            href="/verifikasi"
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 px-4 py-2.5 text-sm font-semibold text-gray-50 transition-colors hover:bg-gray-700"
           >
-            <Download className="h-4 w-4" aria-hidden="true" />
-            Unduh CSV
-          </button>
-        )}
+            <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+            Verifikasi Pemadaman
+          </Link>
+          {showDownload && (
+            <button
+              type="button"
+              onClick={onDownloadCsv}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 px-4 py-2.5 text-sm font-semibold text-gray-50 transition-colors hover:bg-gray-700"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Unduh CSV
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );
