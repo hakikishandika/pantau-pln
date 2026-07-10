@@ -1,6 +1,7 @@
 "use client";
 
 import { Upload } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { AppLogo } from "@/components/app-logo";
@@ -256,6 +257,14 @@ export default function SubmitPage() {
   return (
     <main className="flex flex-1 flex-col bg-gray-950 px-4 py-8 sm:px-6">
       <div className="mx-auto w-full max-w-md">
+        <div className="mb-4">
+          <Link
+            href="/admin"
+            className="text-sm font-medium text-blue-500 hover:text-blue-400"
+          >
+            ← Kembali ke dashboard
+          </Link>
+        </div>
         <header className="mb-6 flex flex-col items-center text-center">
           <AppLogo />
           <h1 className="mt-4 text-xl font-bold leading-tight text-gray-50 sm:text-2xl">

@@ -6,6 +6,7 @@ import {
   LogOut,
   MapPinned,
   MessageCircle,
+  Upload,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -259,6 +260,13 @@ export default function AdminDashboardPage() {
             >
               <MapPinned className="h-4 w-4 text-blue-500" aria-hidden="true" />
               Regeocode Data
+            </Link>
+            <Link
+              href="/admin/submit"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500"
+            >
+              <Upload className="h-4 w-4" aria-hidden="true" />
+              Upload Flyer Baru
             </Link>
             <Link
               href="/admin/comments"

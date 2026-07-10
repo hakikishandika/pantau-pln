@@ -238,3 +238,15 @@ export function aggregateLocationsByName(
 
   return Array.from(grouped.values()).sort((a, b) => b.total_jam - a.total_jam);
 }
+
+export function toMapPoints(locations: AggregatedLocation[]) {
+  return locations.map((location) => ({
+    id: location.nama,
+    lat: location.lat,
+    lng: location.lng,
+    nama: location.nama,
+    jumlah_sesi: location.jumlah_sesi,
+    total_jam: location.total_jam,
+    geocode_source: location.geocode_source,
+  }));
+}
