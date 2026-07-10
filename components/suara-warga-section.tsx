@@ -29,14 +29,18 @@ function formatReportLabel(report: TodayFlyerReport): string {
 
 export function SuaraWargaSection({
   todayReports,
+  selectedFlyerId = null,
+  onSelectedFlyerIdChange,
 }: {
   todayReports: TodayFlyerReport[];
+  selectedFlyerId?: string | null;
+  onSelectedFlyerIdChange?: (flyerId: string) => void;
 }) {
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [comments, setComments] = useState<ImpactComment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCommentForm, setShowCommentForm] = useState(false);
-  const [selectedFlyerId, setSelectedFlyerId] = useState("");
+  const [internalFlyerId, setInternalFlyerId] = useState("");
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [commentText, setCommentText] = useState("");
@@ -44,7 +48,17 @@ export function SuaraWargaSection({
   const [formError, setFormError] = useState<string | null>(null);
 
   const defaultFlyerId = todayReports[0]?.id ?? "";
-  const flyerIdValue = selectedFlyerId || defaultFlyerId;
+  const flyerIdValue =
+    selectedFlyerId ?? (internalFlyerId || defaultFlyerId);
+
+  function handleFlyerChange(flyerId: string) {
+    if (onSelectedFlyerIdChange) {
+      onSelectedFlyerIdChange(flyerId);
+    } else {
+      setInternalFlyerId(flyerId);
+    }
+    setSelectedArea("");
+  }
 
   const selectedReport = useMemo(
     () => todayReports.find((report) => report.id === flyerIdValue) ?? null,
@@ -195,7 +209,10 @@ export function SuaraWargaSection({
     : [];
 
   return (
-    <section className="rounded-2xl border border-gray-800 bg-gray-900 p-4 sm:p-5">
+    <section
+      id="suara-warga"
+      className="rounded-2xl border border-gray-800 bg-gray-900 p-4 sm:p-5 scroll-mt-6"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <MessagesSquare className="h-5 w-5 text-blue-500" aria-hidden="true" />
@@ -231,10 +248,7 @@ export function SuaraWargaSection({
               <select
                 id="suara-flyer"
                 value={flyerIdValue}
-                onChange={(event) => {
-                  setSelectedFlyerId(event.target.value);
-                  setSelectedArea("");
-                }}
+                onChange={(event) => handleFlyerChange(event.target.value)}
                 disabled={isSubmitting}
                 className="mt-1.5 block w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-50 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2"
               >

@@ -72,6 +72,16 @@ export default function PublicDashboardPage() {
   const [period, setPeriod] = useState<PeriodFilter>("7d");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [preselectedSuaraFlyerId, setPreselectedSuaraFlyerId] = useState<
+    string | null
+  >(null);
+
+  function scrollToSuaraWarga(flyerId: string) {
+    setPreselectedSuaraFlyerId(flyerId);
+    document
+      .getElementById("suara-warga")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -216,7 +226,11 @@ export default function PublicDashboardPage() {
           ) : (
             <div className="mt-4 space-y-2">
               {todayReports.map((report) => (
-                <TodayOutageReportRow key={report.id} report={report} />
+                <TodayOutageReportRow
+                  key={report.id}
+                  report={report}
+                  onCommentClick={scrollToSuaraWarga}
+                />
               ))}
             </div>
           )}
@@ -410,7 +424,11 @@ export default function PublicDashboardPage() {
           </section>
         )}
 
-        <SuaraWargaSection todayReports={todayReports} />
+        <SuaraWargaSection
+          todayReports={todayReports}
+          selectedFlyerId={preselectedSuaraFlyerId}
+          onSelectedFlyerIdChange={setPreselectedSuaraFlyerId}
+        />
 
         <section className="rounded-2xl border border-gray-800 bg-gray-900">
           <div className="border-b border-gray-800 px-4 py-3 sm:px-5">
