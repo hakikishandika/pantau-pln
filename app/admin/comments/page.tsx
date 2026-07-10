@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { MessageCircle, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { CategoryBadge } from "@/components/category-badge";
 import { formatImpactCommentBadge } from "@/lib/impact-comments";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { ImpactCommentWithFlyer } from "@/lib/types/impact-comment";
@@ -162,20 +164,23 @@ export default function AdminCommentsPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white px-4 py-4 sm:px-6">
+    <main className="flex flex-1 flex-col bg-gray-950">
+      <header className="border-b border-gray-800 bg-gray-900 px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-zinc-900 sm:text-xl">
-              Moderasi Komentar Dampak
-            </h1>
-            <p className="text-sm text-zinc-600">
-              Kelola laporan dampak dari warga
-            </p>
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-blue-500" aria-hidden="true" />
+            <div>
+              <h1 className="text-lg font-bold text-gray-50 sm:text-xl">
+                Moderasi Komentar Dampak
+              </h1>
+              <p className="text-sm text-gray-400">
+                Kelola laporan dampak dari warga
+              </p>
+            </div>
           </div>
           <Link
             href="/admin"
-            className="inline-flex w-fit rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+            className="inline-flex w-fit rounded-xl border border-gray-700 px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800"
           >
             Kembali ke Dashboard
           </Link>
@@ -185,7 +190,7 @@ export default function AdminCommentsPage() {
       <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6">
         {errorMessage && (
           <div
-            className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
             role="alert"
           >
             {errorMessage}
@@ -194,20 +199,20 @@ export default function AdminCommentsPage() {
 
         {successMessage && (
           <div
-            className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+            className="mb-4 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400"
             role="status"
           >
             {successMessage}
           </div>
         )}
 
-        <section className="mb-6 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
+        <section className="mb-6 rounded-2xl border border-gray-800 bg-gray-900 p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-zinc-900">
+              <h2 className="text-sm font-semibold text-gray-50">
                 Ringkasan Harian
               </h2>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-gray-500">
                 {latestSummary
                   ? `Terakhir dibuat: ${new Date(latestSummary.generated_at).toLocaleString("id-ID")}`
                   : "Belum ada ringkasan tersimpan"}
@@ -217,7 +222,7 @@ export default function AdminCommentsPage() {
               type="button"
               onClick={() => void handleGenerateSummary()}
               disabled={isGenerating}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-violet-300"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-800"
             >
               {isGenerating ? (
                 <>
@@ -235,11 +240,11 @@ export default function AdminCommentsPage() {
         </section>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-16 text-sm text-zinc-500">
+          <div className="flex items-center justify-center py-16 text-sm text-gray-500">
             Memuat komentar...
           </div>
         ) : comments.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-200 bg-white p-8 text-center text-sm text-zinc-500">
+          <div className="rounded-2xl border border-gray-800 bg-gray-900 p-8 text-center text-sm text-gray-500">
             Belum ada komentar dampak.
           </div>
         ) : (
@@ -247,32 +252,30 @@ export default function AdminCommentsPage() {
             {comments.map((comment) => (
               <li
                 key={comment.id}
-                className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5"
+                className="rounded-2xl border border-gray-800 bg-gray-900 p-4 shadow-sm sm:p-5"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
-                    <p className="font-mono text-xs font-semibold text-amber-800">
+                    <p className="font-mono text-xs font-semibold text-blue-400">
                       {formatImpactCommentBadge(
                         comment.nama_area,
                         comment.nomor_komentar,
                       )}
                     </p>
-                    <p className="mt-2 text-sm text-zinc-800">
+                    <p className="mt-2 text-sm text-gray-300">
                       {comment.komentar}
                     </p>
                     {comment.kategori.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {comment.kategori.map((category) => (
-                          <span
+                          <CategoryBadge
                             key={`${comment.id}-${category}`}
-                            className="inline-flex rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[10px] text-zinc-600"
-                          >
-                            {category}
-                          </span>
+                            category={category}
+                          />
                         ))}
                       </div>
                     )}
-                    <p className="mt-2 text-xs text-zinc-500">
+                    <p className="mt-2 text-xs text-gray-500">
                       Flyer:{" "}
                       {comment.flyers?.tanggal_pemadaman ?? "tanggal belum diisi"}
                       {comment.flyers?.unit_pelaksana
@@ -286,8 +289,9 @@ export default function AdminCommentsPage() {
                     type="button"
                     onClick={() => void handleDelete(comment.id)}
                     disabled={deletingId === comment.id}
-                    className="inline-flex shrink-0 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                     {deletingId === comment.id ? "Menghapus..." : "Hapus"}
                   </button>
                 </div>

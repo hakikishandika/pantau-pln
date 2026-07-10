@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { AppLogo } from "@/components/app-logo";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export default function AdminLoginPage() {
@@ -45,13 +46,14 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
-        <header className="mb-6 text-center">
-          <h1 className="text-xl font-bold text-zinc-900 sm:text-2xl">
+    <main className="flex flex-1 flex-col items-center justify-center bg-gray-950 px-4 py-12">
+      <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-gray-900 p-6 sm:p-8">
+        <header className="mb-6 flex flex-col items-center text-center">
+          <AppLogo />
+          <h1 className="mt-4 text-xl font-bold text-gray-50 sm:text-2xl">
             Login Admin
           </h1>
-          <p className="mt-2 text-sm text-zinc-600">
+          <p className="mt-2 text-sm text-gray-400">
             Pantau Pemadaman PLN Banjarbaru
           </p>
         </header>
@@ -60,7 +62,7 @@ export default function AdminLoginPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-zinc-800"
+              className="block text-sm font-medium text-gray-300"
             >
               Email
             </label>
@@ -73,7 +75,7 @@ export default function AdminLoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               disabled={isLoading}
-              className="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50"
+              className="mt-1.5 block w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2.5 text-sm text-gray-50 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="admin@example.com"
             />
           </div>
@@ -81,7 +83,7 @@ export default function AdminLoginPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-zinc-800"
+              className="block text-sm font-medium text-gray-300"
             >
               Password
             </label>
@@ -94,14 +96,14 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               disabled={isLoading}
-              className="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50"
+              className="mt-1.5 block w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2.5 text-sm text-gray-50 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="••••••••"
             />
           </div>
 
           {errorMessage && (
             <div
-              className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
               role="alert"
             >
               {errorMessage}
@@ -111,7 +113,7 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-800"
           >
             {isLoading ? (
               <>

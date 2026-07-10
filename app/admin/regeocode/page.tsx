@@ -1,5 +1,6 @@
 "use client";
 
+import { MapPinned } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -83,24 +84,27 @@ export default function AdminRegeocodePage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white px-4 py-4 sm:px-6">
+    <main className="flex flex-1 flex-col bg-gray-950">
+      <header className="border-b border-gray-800 bg-gray-900 px-4 py-4 sm:px-6">
         <div className="mx-auto max-w-3xl">
           <Link
             href="/admin"
-            className="text-sm font-medium text-blue-600 hover:underline"
+            className="text-sm font-medium text-blue-500 hover:text-blue-400"
           >
             ← Kembali ke dashboard
           </Link>
-          <h1 className="mt-1 text-lg font-bold text-zinc-900 sm:text-xl">
-            Regeocode Semua Lokasi
-          </h1>
+          <div className="mt-1 flex items-center gap-2">
+            <MapPinned className="h-5 w-5 text-blue-500" aria-hidden="true" />
+            <h1 className="text-lg font-bold text-gray-50 sm:text-xl">
+              Regeocode Semua Lokasi
+            </h1>
+          </div>
         </div>
       </header>
 
       <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-6 sm:px-6">
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-          <p className="text-sm text-amber-900">
+        <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
+          <p className="text-sm text-amber-300">
             Proses ini akan menghapus cache lama dan mencari ulang koordinat
             SEMUA lokasi di database, bisa memakan waktu lama.
           </p>
@@ -108,7 +112,7 @@ export default function AdminRegeocodePage() {
 
         {errorMessage && (
           <div
-            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
             role="alert"
           >
             {errorMessage}
@@ -119,7 +123,7 @@ export default function AdminRegeocodePage() {
           type="button"
           onClick={() => void handleRegeocodeAll()}
           disabled={isRunning}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-800"
         >
           {isRunning ? (
             <>
@@ -135,14 +139,14 @@ export default function AdminRegeocodePage() {
         </button>
 
         {isRunning && (
-          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-medium text-zinc-900">
+          <div className="rounded-2xl border border-gray-800 bg-gray-900 p-4">
+            <p className="text-sm font-medium text-gray-50">
               {progress.total > 0
                 ? `Memproses ${progress.current} dari ${progress.total} lokasi`
                 : "Menyiapkan data..."}
             </p>
             {progress.nama && (
-              <p className="mt-1 truncate text-xs text-zinc-500">
+              <p className="mt-1 truncate text-xs text-gray-500">
                 Saat ini: {progress.nama}
               </p>
             )}
@@ -150,11 +154,11 @@ export default function AdminRegeocodePage() {
         )}
 
         {summary && (
-          <section className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm">
-            <h2 className="text-base font-semibold text-green-900">
+          <section className="rounded-2xl border border-green-500/30 bg-green-500/10 p-5">
+            <h2 className="text-base font-semibold text-green-400">
               Ringkasan Regeocode
             </h2>
-            <ul className="mt-3 space-y-1 text-sm text-green-800">
+            <ul className="mt-3 space-y-1 text-sm text-green-300/90">
               <li>Berhasil: {summary.berhasil}</li>
               <li>Gagal: {summary.gagal}</li>
               <li>Nominatim Banjarbaru: {summary.nominatim_banjarbaru}</li>

@@ -7,9 +7,9 @@ const STATUS_LABELS: Record<FlyerStatus, string> = {
 };
 
 const STATUS_STYLES: Record<FlyerStatus, string> = {
-  pending: "bg-amber-100 text-amber-800 border-amber-200",
-  approved: "bg-green-100 text-green-800 border-green-200",
-  rejected: "bg-red-100 text-red-800 border-red-200",
+  pending: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  approved: "bg-green-500/20 text-green-400 border-green-500/30",
+  rejected: "bg-red-500/20 text-red-400 border-red-500/30",
 };
 
 export function formatSubmitDate(isoDate: string): string {

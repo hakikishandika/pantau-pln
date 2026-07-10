@@ -1,7 +1,9 @@
 "use client";
 
+import { Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { AppLogo } from "@/components/app-logo";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -252,13 +254,14 @@ export default function SubmitPage() {
     : `${successCount} flyer diproses, menunggu review singkat`;
 
   return (
-    <main className="flex flex-1 flex-col bg-zinc-50 px-4 py-8 sm:px-6">
+    <main className="flex flex-1 flex-col bg-gray-950 px-4 py-8 sm:px-6">
       <div className="mx-auto w-full max-w-md">
-        <header className="mb-6 text-center">
-          <h1 className="text-xl font-bold leading-tight text-zinc-900 sm:text-2xl">
+        <header className="mb-6 flex flex-col items-center text-center">
+          <AppLogo />
+          <h1 className="mt-4 text-xl font-bold leading-tight text-gray-50 sm:text-2xl">
             Laporkan Jadwal Pemadaman PLN
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-zinc-600 sm:text-base">
+          <p className="mt-3 text-sm leading-relaxed text-gray-400 sm:text-base">
             Upload foto flyer/poster jadwal pemadaman dari WhatsApp Channel PLN
             ULP Banjarbaru
           </p>
@@ -266,10 +269,10 @@ export default function SubmitPage() {
 
         {isSuccess ? (
           <div
-            className="rounded-2xl border border-green-200 bg-green-50 p-6 text-center shadow-sm"
+            className="rounded-2xl border border-green-500/30 bg-green-500/10 p-6 text-center shadow-sm"
             role="status"
           >
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20 text-green-400">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -284,11 +287,11 @@ export default function SubmitPage() {
                 <path d="M20 6 9 17l-5-5" />
               </svg>
             </div>
-            <p className="font-medium text-green-800">{successMessage}</p>
+            <p className="font-medium text-green-400">{successMessage}</p>
             <button
               type="button"
               onClick={resetForm}
-              className="mt-4 text-sm font-medium text-green-700 underline underline-offset-2 hover:text-green-900"
+              className="mt-4 text-sm font-medium text-green-300 underline underline-offset-2 hover:text-green-200"
             >
               Kirim flyer lain
             </button>
@@ -296,15 +299,15 @@ export default function SubmitPage() {
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6"
+            className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6"
           >
             <label
               htmlFor="flyer-image"
-              className="block text-sm font-medium text-zinc-800"
+              className="block text-sm font-medium text-gray-300"
             >
               Foto flyer
             </label>
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-gray-500">
               JPG, PNG, atau WebP — maks. 10MB per file. Bisa pilih banyak file.
             </p>
 
@@ -318,12 +321,12 @@ export default function SubmitPage() {
                 multiple
                 onChange={handleFileChange}
                 disabled={isLoading}
-                className="block w-full cursor-pointer text-sm text-zinc-600 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="block w-full cursor-pointer text-sm text-gray-400 file:mr-4 file:cursor-pointer file:rounded-xl file:border-0 file:bg-blue-600/20 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-blue-400 hover:file:bg-blue-600/30 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 
             {selectedFiles.length > 0 && (
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-gray-500">
                 {selectedFiles.length} file dipilih
               </p>
             )}
@@ -333,7 +336,7 @@ export default function SubmitPage() {
                 {previews.map((preview) => (
                   <div
                     key={preview.url}
-                    className="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100"
+                    className="overflow-hidden rounded-xl border border-gray-700 bg-gray-800"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -341,7 +344,7 @@ export default function SubmitPage() {
                       alt={`Preview ${preview.file.name}`}
                       className="aspect-square w-full object-cover"
                     />
-                    <p className="truncate px-2 py-1 text-[10px] text-zinc-500">
+                    <p className="truncate px-2 py-1 text-[10px] text-gray-500">
                       {preview.file.name} ({formatFileSize(preview.file.size)})
                     </p>
                   </div>
@@ -351,7 +354,7 @@ export default function SubmitPage() {
 
             {errorMessage && (
               <div
-                className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
                 role="alert"
               >
                 {errorMessage}
@@ -361,7 +364,7 @@ export default function SubmitPage() {
             <button
               type="submit"
               disabled={isLoading || selectedFiles.length === 0}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-800"
             >
               {isLoading ? (
                 <>
@@ -374,7 +377,10 @@ export default function SubmitPage() {
                     : `Memproses ${progress.current}/${progress.total}`}
                 </>
               ) : (
-                "Kirim Flyer"
+                <>
+                  <Upload className="h-4 w-4" aria-hidden="true" />
+                  Kirim Flyer
+                </>
               )}
             </button>
           </form>

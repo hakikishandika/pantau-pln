@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Check, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -526,7 +527,7 @@ export default function AdminFlyerDetailPage() {
       source === "nominatim_kalsel"
     ) {
       return (
-        <span className="inline-flex w-fit rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+        <span className="inline-flex w-fit rounded-full border border-green-500/30 bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-400">
           Nominatim
         </span>
       );
@@ -536,7 +537,7 @@ export default function AdminFlyerDetailPage() {
       return (
         <span
           title="Perkiraan AI, mungkin kurang akurat"
-          className="inline-flex w-fit cursor-help rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800"
+          className="inline-flex w-fit cursor-help rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400"
         >
           Estimasi AI
         </span>
@@ -548,9 +549,9 @@ export default function AdminFlyerDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="flex flex-1 items-center justify-center bg-zinc-50 py-16 text-sm text-zinc-500">
+      <main className="flex flex-1 items-center justify-center bg-gray-950 py-16 text-sm text-gray-500">
         <span
-          className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"
+          className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-700 border-t-blue-500"
           aria-hidden="true"
         />
         Memuat detail flyer...
@@ -560,8 +561,8 @@ export default function AdminFlyerDetailPage() {
 
   if (!flyer) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-4 py-16">
-        <p className="text-sm text-zinc-600">Flyer tidak ditemukan.</p>
+      <main className="flex flex-1 flex-col items-center justify-center bg-gray-950 px-4 py-16">
+        <p className="text-sm text-gray-400">Flyer tidak ditemukan.</p>
         <Link
           href="/admin"
           className="mt-4 text-sm font-medium text-blue-600 hover:underline"
@@ -573,8 +574,8 @@ export default function AdminFlyerDetailPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white px-4 py-4 sm:px-6">
+    <main className="flex flex-1 flex-col bg-gray-950">
+      <header className="border-b border-gray-800 bg-gray-900 px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <div>
             <Link
@@ -583,7 +584,7 @@ export default function AdminFlyerDetailPage() {
             >
               ← Kembali
             </Link>
-            <h1 className="mt-1 text-lg font-bold text-zinc-900 sm:text-xl">
+            <h1 className="mt-1 text-lg font-bold text-gray-50 sm:text-xl">
               Detail Flyer
             </h1>
           </div>
@@ -594,7 +595,7 @@ export default function AdminFlyerDetailPage() {
       <div className="mx-auto w-full max-w-3xl flex-1 space-y-6 px-4 py-6 sm:px-6">
         {errorMessage && (
           <div
-            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
             role="alert"
           >
             {errorMessage}
@@ -603,25 +604,25 @@ export default function AdminFlyerDetailPage() {
 
         {successMessage && (
           <div
-            className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+            className="rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400"
             role="status"
           >
             {successMessage}
           </div>
         )}
 
-        <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm sm:p-6">
-          <h2 className="text-base font-semibold text-blue-900">
+        <section className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-5 sm:p-6">
+          <h2 className="text-base font-semibold text-blue-400">
             Proses Otomatis
           </h2>
-          <p className="mt-1 text-sm text-blue-800">
+          <p className="mt-1 text-sm text-blue-300/80">
             Jalankan ekstraksi AI, normalisasi, dan geocoding dalam satu klik.
           </p>
           <button
             type="button"
             onClick={() => void handleAutoProcess()}
             disabled={isBusy}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300 sm:w-auto"
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-800 sm:w-auto"
           >
             {isAutoProcessing ? (
               <>
@@ -637,20 +638,20 @@ export default function AdminFlyerDetailPage() {
           </button>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 shadow-sm">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={flyer.image_url}
             alt="Flyer pemadaman"
-            className="max-h-[70vh] w-full bg-zinc-100 object-contain"
+            className="max-h-[70vh] w-full bg-gray-800 object-contain"
           />
         </section>
 
-        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="text-base font-semibold text-zinc-900">
+        <section className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6">
+          <h2 className="text-base font-semibold text-gray-50">
             Proses Manual
           </h2>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-gray-500">
             Jalankan satu langkah saja jika perlu mengulang bagian tertentu.
           </p>
 
@@ -659,12 +660,12 @@ export default function AdminFlyerDetailPage() {
               type="button"
               onClick={() => void handleExtractWithAi()}
               disabled={isBusy}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-800 transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 px-4 py-2.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isExtracting ? (
                 <>
                   <span
-                    className="h-4 w-4 animate-spin rounded-full border-2 border-violet-600 border-t-transparent"
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-blue-400 border-t-transparent"
                     aria-hidden="true"
                   />
                   Mengekstrak dengan AI...
@@ -678,7 +679,7 @@ export default function AdminFlyerDetailPage() {
               type="button"
               onClick={() => void handleNormalizeLocations()}
               disabled={isBusy}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-800 transition-colors hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 px-4 py-2.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isNormalizing ? "Menormalisasi lokasi..." : "Normalisasi Lokasi"}
             </button>
@@ -687,7 +688,7 @@ export default function AdminFlyerDetailPage() {
               type="button"
               onClick={() => void handleGeocodeAll()}
               disabled={isBusy || pendingGeocodeCount === 0}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-800 transition-colors hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 px-4 py-2.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isGeocoding
                 ? "Bisa memakan waktu ~1 detik per lokasi..."
@@ -695,16 +696,16 @@ export default function AdminFlyerDetailPage() {
             </button>
           </div>
           {pendingGeocodeCount > 0 && (
-            <p className="mt-3 text-xs text-zinc-500">
+            <p className="mt-3 text-xs text-gray-500">
               {pendingGeocodeCount} lokasi belum punya koordinat (~1 detik/lokasi
               untuk Nominatim).
             </p>
           )}
         </section>
 
-        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="text-base font-semibold text-zinc-900">Data Flyer</h2>
-          <p className="mt-1 text-xs text-zinc-500">
+        <section className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6">
+          <h2 className="text-base font-semibold text-gray-50">Data Flyer</h2>
+          <p className="mt-1 text-xs text-gray-500">
             Submit: {formatSubmitDate(flyer.created_at)}
             {flyer.reviewed_at
               ? ` · Direview: ${formatSubmitDate(flyer.reviewed_at)}`
@@ -715,7 +716,7 @@ export default function AdminFlyerDetailPage() {
             <div>
               <label
                 htmlFor="tanggal_pemadaman"
-                className="block text-sm font-medium text-zinc-800"
+                className="block text-sm font-medium text-gray-300"
               >
                 Tanggal Pemadaman
               </label>
@@ -727,14 +728,14 @@ export default function AdminFlyerDetailPage() {
                   handleFieldChange("tanggal_pemadaman", event.target.value)
                 }
                 disabled={isBusy}
-                className="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50"
+                className="mt-1.5 block w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2.5 text-sm text-gray-50 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-800"
               />
             </div>
 
             <div>
               <label
                 htmlFor="waktu_pemadaman"
-                className="block text-sm font-medium text-zinc-800"
+                className="block text-sm font-medium text-gray-300"
               >
                 Waktu Pemadaman
               </label>
@@ -747,14 +748,14 @@ export default function AdminFlyerDetailPage() {
                 }
                 disabled={isBusy}
                 placeholder="08:00 - 14:00 WITA"
-                className="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50"
+                className="mt-1.5 block w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2.5 text-sm text-gray-50 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-800"
               />
             </div>
 
             <div>
               <label
                 htmlFor="unit_pelaksana"
-                className="block text-sm font-medium text-zinc-800"
+                className="block text-sm font-medium text-gray-300"
               >
                 Unit Pelaksana
               </label>
@@ -767,7 +768,7 @@ export default function AdminFlyerDetailPage() {
                 }
                 disabled={isBusy}
                 placeholder="PLN ULP Banjarbaru"
-                className="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50"
+                className="mt-1.5 block w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2.5 text-sm text-gray-50 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-800"
               />
             </div>
           </div>
@@ -777,7 +778,7 @@ export default function AdminFlyerDetailPage() {
               type="button"
               onClick={() => void handleSaveChanges()}
               disabled={isBusy}
-              className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+              className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-800"
             >
               {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
             </button>
@@ -786,8 +787,9 @@ export default function AdminFlyerDetailPage() {
               type="button"
               onClick={() => void handleStatusUpdate("approved")}
               disabled={isBusy}
-              className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-300"
+              className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-green-800"
             >
+              <Check className="h-4 w-4" aria-hidden="true" />
               {isUpdatingStatus ? "Memproses..." : "Approve"}
             </button>
 
@@ -795,8 +797,9 @@ export default function AdminFlyerDetailPage() {
               type="button"
               onClick={() => void handleStatusUpdate("rejected")}
               disabled={isBusy}
-              className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-red-800"
             >
+              <X className="h-4 w-4" aria-hidden="true" />
               Reject
             </button>
 
@@ -805,24 +808,24 @@ export default function AdminFlyerDetailPage() {
                 type="button"
                 onClick={() => void handleCancelApproval()}
                 disabled={isBusy}
-                className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Batalkan Approval
               </button>
             )}
           </div>
           {flyer.processing_error && (
-            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-400">
               Error proses otomatis: {flyer.processing_error}
             </p>
           )}
         </section>
 
-        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="text-base font-semibold text-zinc-900">
+        <section className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-sm sm:p-6">
+          <h2 className="text-base font-semibold text-gray-50">
             Lokasi Terdampak
           </h2>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-gray-500">
             {totalLocations > 0
               ? `${totalLocations} lokasi dari hasil ekstraksi`
               : "Belum ada lokasi. Gunakan tombol Ekstrak dengan AI."}
@@ -833,9 +836,9 @@ export default function AdminFlyerDetailPage() {
               {sessions.map((session) => (
                 <div
                   key={session.id}
-                  className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"
+                  className="rounded-xl border border-gray-800 bg-gray-950 p-4"
                 >
-                  <p className="text-sm font-medium text-zinc-800">
+                  <p className="text-sm font-medium text-gray-300">
                     Sesi {session.sesi_ke}
                     {session.waktu_spesifik
                       ? ` · ${session.waktu_spesifik}`
@@ -852,13 +855,13 @@ export default function AdminFlyerDetailPage() {
                         return (
                           <li
                             key={location.id}
-                            className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-2 rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-sm text-gray-400 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <span>{location.nama_raw}</span>
                             <div className="flex flex-col items-start gap-1 sm:items-end">
                               {hasCoordinates ? (
                                 <>
-                                  <span className="text-xs text-zinc-500">
+                                  <span className="text-xs text-gray-500">
                                     {location.lat?.toFixed(5)},{" "}
                                     {location.lng?.toFixed(5)}
                                   </span>
@@ -867,11 +870,11 @@ export default function AdminFlyerDetailPage() {
                                   />
                                 </>
                               ) : isFailedGeocode ? (
-                                <span className="inline-flex w-fit rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
+                                <span className="inline-flex w-fit rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-400">
                                   Gagal di-geocode
                                 </span>
                               ) : (
-                                <span className="text-xs text-zinc-400">
+                                <span className="text-xs text-gray-500">
                                   Belum di-geocode
                                 </span>
                               )}
@@ -881,7 +884,7 @@ export default function AdminFlyerDetailPage() {
                       })}
                     </ul>
                   ) : (
-                    <p className="mt-2 text-sm text-zinc-500">
+                    <p className="mt-2 text-sm text-gray-500">
                       Tidak ada lokasi di sesi ini.
                     </p>
                   )}
@@ -891,7 +894,7 @@ export default function AdminFlyerDetailPage() {
           )}
 
           {totalLocations > 0 && geocodeSummary && (
-            <p className="mt-4 border-t border-zinc-200 pt-4 text-sm text-zinc-700">
+            <p className="mt-4 border-t border-gray-800 pt-4 text-sm text-gray-400">
               Ringkasan geocode: {geocodeSummary.berhasil} berhasil (
               {geocodeSummary.dariCache} cache, {geocodeSummary.dariNominatim}{" "}
               Nominatim, {geocodeSummary.dariEstimasiAi} estimasi AI),{" "}

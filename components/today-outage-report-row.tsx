@@ -1,12 +1,15 @@
 "use client";
 
+import { MessageCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { CategoryBadge } from "@/components/category-badge";
 import {
   formatImpactCommentBadge,
   IMPACT_CATEGORIES,
   MAX_IMPACT_COMMENT_LENGTH,
 } from "@/lib/impact-comments";
+import { getCategoryBadgeClass } from "@/lib/category-badge-styles";
 import type { TodayFlyerReport } from "@/lib/public-dashboard";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import type { ImpactComment } from "@/lib/types/impact-comment";
@@ -139,8 +142,7 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
       setSelectedCategories([]);
       setSelectedArea("");
 
-      const supabaseReload = createSupabaseBrowserClient();
-      const { data: refreshed, error: refreshError } = await supabaseReload
+      const { data: refreshed, error: refreshError } = await supabase
         .from("impact_comments")
         .select("*")
         .eq("flyer_id", report.id)
@@ -161,22 +163,22 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
   }
 
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50/60">
+    <div className="rounded-xl border border-gray-700 bg-gray-800/60">
       <div className="flex items-start gap-2 px-4 py-3">
         <button
           type="button"
           onClick={() => setExpanded((current) => !current)}
           className="min-w-0 flex-1 text-left transition-colors hover:opacity-90"
         >
-          <p className="text-sm font-medium text-zinc-900">
+          <p className="text-sm font-medium text-gray-50">
             {expanded
               ? report.locations.map((entry) => entry.nama).join(", ")
               : summarizeLocations(report.locations)}
           </p>
-          <p className="mt-1 text-xs text-zinc-600">
+          <p className="mt-1 text-xs text-gray-400">
             {report.unit_pelaksana || "Unit pelaksana belum diisi"} · {waktu}
           </p>
-          <p className="mt-1 text-[11px] text-amber-700">
+          <p className="mt-1 text-[11px] text-blue-400">
             {expanded ? "Klik untuk ringkas" : "Klik untuk lihat semua lokasi"}
           </p>
         </button>
@@ -184,25 +186,13 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
         <button
           type="button"
           onClick={() => setShowCommentForm((current) => !current)}
-          className="relative inline-flex shrink-0 items-center justify-center rounded-lg border border-amber-300 bg-white p-2 text-amber-800 transition-colors hover:bg-amber-100"
+          className="relative inline-flex shrink-0 items-center justify-center rounded-xl border border-gray-600 bg-gray-800 p-2 text-blue-400 transition-colors hover:bg-gray-700"
           aria-expanded={showCommentForm}
           aria-label="Lapor dampak"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-            aria-hidden="true"
-          >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />
           {comments.length > 0 && (
-            <span className="absolute -right-1.5 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-600 px-1 text-[10px] font-bold text-white">
+            <span className="absolute -right-1.5 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
               {comments.length}
             </span>
           )}
@@ -212,11 +202,11 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
       {showCommentForm && (
         <form
           onSubmit={(event) => void handleSubmitComment(event)}
-          className="border-t border-amber-200 px-4 py-4"
+          className="border-t border-gray-700 px-4 py-4"
         >
           <label
             htmlFor={`area-${report.id}`}
-            className="block text-xs font-medium text-zinc-700"
+            className="block text-xs font-medium text-gray-400"
           >
             Pilih area yang kamu maksud
           </label>
@@ -225,7 +215,7 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
             value={areaValue}
             onChange={(event) => setSelectedArea(event.target.value)}
             disabled={isSubmitting || areaOptions.length === 0}
-            className="mt-1.5 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-amber-500 focus:border-amber-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50"
+            className="mt-1.5 block w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-50 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {areaOptions.length === 0 ? (
               <option value="">Tidak ada area</option>
@@ -238,7 +228,7 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
             )}
           </select>
 
-          <p className="mt-4 text-xs font-medium text-zinc-700">
+          <p className="mt-4 text-xs font-medium text-gray-400">
             Kategori dampak (bisa pilih lebih dari satu)
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -252,8 +242,8 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
                   disabled={isSubmitting}
                   className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     isActive
-                      ? "border-amber-500 bg-amber-500 text-white"
-                      : "border-zinc-300 bg-white text-zinc-700 hover:border-amber-300"
+                      ? `${getCategoryBadgeClass(category)} border-transparent`
+                      : "border-gray-600 bg-gray-800 text-gray-400 hover:border-gray-500"
                   }`}
                 >
                   {category}
@@ -264,7 +254,7 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
 
           <label
             htmlFor={`comment-${report.id}`}
-            className="mt-4 block text-xs font-medium text-zinc-700"
+            className="mt-4 block text-xs font-medium text-gray-400"
           >
             Cerita dampakmu
           </label>
@@ -277,18 +267,18 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
             disabled={isSubmitting}
             rows={3}
             placeholder="Ceritakan dampaknya buat kamu, misalnya: warung saya tutup 5 jam, kerugian sekitar 200 ribu"
-            className="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-amber-500 focus:border-amber-500 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50"
+            className="mt-1.5 block w-full rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-50 outline-none ring-blue-500 focus:border-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
           />
-          <p className="mt-1 text-right text-[11px] text-zinc-500">
+          <p className="mt-1 text-right text-[11px] text-gray-500">
             {commentText.length}/{MAX_IMPACT_COMMENT_LENGTH}
           </p>
 
-          <p className="mt-2 text-[11px] text-zinc-500">
+          <p className="mt-2 text-[11px] text-gray-500">
             Komentar kamu bisa dipakai buat laporan ke PLN
           </p>
 
           {formError && (
-            <p className="mt-2 text-xs text-red-600" role="alert">
+            <p className="mt-2 text-xs text-red-400" role="alert">
               {formError}
             </p>
           )}
@@ -296,7 +286,7 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
           <button
             type="submit"
             disabled={isSubmitting || areaOptions.length === 0}
-            className="mt-3 inline-flex items-center justify-center rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-amber-300"
+            className="mt-3 inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-800"
           >
             {isSubmitting ? "Mengirim..." : "Kirim laporan dampak"}
           </button>
@@ -304,29 +294,27 @@ export function TodayOutageReportRow({ report }: { report: TodayFlyerReport }) {
       )}
 
       {(isLoadingComments || comments.length > 0) && (
-        <div className="border-t border-amber-200 px-4 py-3">
+        <div className="border-t border-gray-700 px-4 py-3">
           {isLoadingComments ? (
-            <p className="text-xs text-zinc-500">Memuat komentar...</p>
+            <p className="text-xs text-gray-500">Memuat komentar...</p>
           ) : (
             <ul className="space-y-3">
               {comments.map((comment) => (
                 <li key={comment.id} className="text-sm">
-                  <p className="font-mono text-[11px] font-semibold text-amber-800">
+                  <p className="font-mono text-[11px] font-semibold text-blue-400">
                     {formatImpactCommentBadge(
                       comment.nama_area,
                       comment.nomor_komentar,
                     )}
                   </p>
-                  <p className="mt-1 text-zinc-800">{comment.komentar}</p>
+                  <p className="mt-1 text-gray-300">{comment.komentar}</p>
                   {comment.kategori.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {comment.kategori.map((category) => (
-                        <span
+                        <CategoryBadge
                           key={`${comment.id}-${category}`}
-                          className="inline-flex rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[10px] text-zinc-600"
-                        >
-                          {category}
-                        </span>
+                          category={category}
+                        />
                       ))}
                     </div>
                   )}
